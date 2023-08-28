@@ -1,0 +1,198 @@
+---
+title: Inferencia Bayesiana
+subtitle: Modelos Normales
+format: html
+---
+
+## Introducción
+
+La estadística y la ciencia de datos, en muchos de sus enfoques y técnicas, a menudo se fundamentan en ciertas distribuciones de probabilidad debido a sus propiedades matemáticas y a su capacidad para describir fenómenos reales. Una de las distribuciones más utilizadas, tanto en estadística clásica como en inferencia bayesiana, es la distribución normal, también conocida como distribución gaussiana.
+
+La distribución normal es simétrica y tiene una forma de campana característica. Está completamente definida por dos parámetros: la media $(\mu)$ y la varianza $(\sigma^2)$. La media determina el centro de la distribución, mientras que la varianza (o desviación estándar, $(\sigma)$) determina el ancho y la dispersión de la distribución.
+
+**Relevancia de la Distribución Normal**:
+- **Centralidad en estadísticas**: Gracias al Teorema del Límite Central, sabemos que la suma de un gran número de variables aleatorias independientes e idénticamente distribuidas tiende a seguir una distribución normal, independientemente de la forma de la distribución original de esas variables.
+
+- **Propiedades matemáticas**: La normalidad tiene propiedades matemáticas atractivas que simplifican muchos análisis y cálculos.
+
+- **Aplicaciones prácticas**: La distribución normal se encuentra en una amplia variedad de aplicaciones, desde la medición de habilidades y talentos (como los resultados de los exámenes) hasta fenómenos naturales (como las alturas o pesos de una población).
+
+### Modelado Normal en Inferencia Bayesiana
+En el contexto de la inferencia bayesiana, el modelado normal implica utilizar la distribución normal como prior, verosimilitud o ambas. Esto puede ser particularmente útil cuando se tiene un conocimiento previo o una creencia de que un parámetro sigue una distribución normal, o cuando los datos observados parecen distribuirse normalmente.
+
+Al combinar un prior normal con una verosimilitud normal, el posterior también será normal, lo que facilita las estimaciones y las interpretaciones. Sin embargo, la flexibilidad de la inferencia bayesiana permite combinar priors normales con verosimilitudes no normales y viceversa, permitiendo una amplia gama de modelados y análisis.
+
+## Modelado Normal
+
+El modelado normal implica el uso de la distribución normal para describir la variabilidad o incertidumbre en un conjunto de datos o parámetro. La normalidad puede ser una suposición basada en la teoría, el conocimiento previo o simplemente una elección práctica debido a las propiedades convenientes de la distribución normal.
+
+**Ejemplo Práctico 1**: Estimación de la Media de una Población
+Supongamos que estás interesado en estimar el peso promedio de los adultos en una ciudad específica. Recolectas una muestra de 100 adultos y registras sus pesos. Ahora quieres hacer una inferencia sobre el peso promedio de todos los adultos de la ciudad.
+
+Dado que no sabes el verdadero peso promedio $(\mu)$, puedes modelar tu incertidumbre sobre $(\mu)$ con una distribución normal, usando la media y la desviación estándar de tu muestra como parámetros.
+
+```{r}
+# Simulación en R:
+set.seed(123)
+pesos_muestra <- rnorm(100, mean = 70, sd = 10) # 70 kg es la media y 10 kg la desviación estándar
+media_muestra <- mean(pesos_muestra)
+sd_muestra <- sd(pesos_muestra)
+
+# Histograma de la muestra
+hist(pesos_muestra, main="Histograma de Pesos de la Muestra", xlab="Peso (kg)", col="lightblue", border="white")
+abline(v = media_muestra, col="red", lwd=2)
+```
+
+En la práctica bayesiana, también tendrías un prior para $(\mu)$. Si no tienes una idea fuerte sobre cuál podría ser el peso promedio, podrías usar un prior no informativo. Si, por otro lado, tuvieras datos anteriores que sugirieran un cierto rango para $(\mu)$, podrías usar un prior informativo.
+
+**Ejemplo Práctico 2**: Control de Calidad
+Imagina que trabajas en control de calidad en una fábrica que produce tornillos. La longitud de los tornillos debe ser de 5 cm. Sin embargo, debido a variaciones en el proceso de producción, hay una pequeña variabilidad en las longitudes. Decides tomar una muestra de tornillos cada hora y medir su longitud. Si la media de las longitudes se desvía significativamente de 5 cm, podría indicar un problema en el proceso de producción.
+
+Puedes modelar las longitudes de los tornillos con una distribución normal y usar la inferencia bayesiana para actualizar continuamente tu creencia sobre la media de la longitud de los tornillos a medida que recopilas más datos.
+
+```{r}
+# Simulación en R:
+set.seed(456)
+longitudes <- rnorm(50, mean = 5, sd = 0.05) # Suponemos una desviación estándar de 0.05 cm
+
+# Histograma de las longitudes
+hist(longitudes, main="Histograma de Longitudes de Tornillos", xlab="Longitud (cm)", col="lightgreen", border="white")
+abline(v = 5, col="red", lwd=2)
+
+```
+
+
+## El Kit de Herramientas Bayesiano
+
+El enfoque bayesiano proporciona un marco coherente y unificado para el análisis estadístico. A continuación, se presentan algunos componentes clave del "kit de herramientas" bayesiano y se ilustran con ejemplos prácticos en R.
+
+### Distribución Posterior
+
+La distribución posterior es el corazón de la inferencia bayesiana. Es la distribución de probabilidad de un parámetro (o parámetros) después de haber observado algunos datos. En términos simples, es lo que "creemos" sobre un parámetro después de haber tomado en cuenta tanto nuestro conocimiento previo como la nueva evidencia proporcionada por los datos.
+
+La distribución posterior es el corazón de la inferencia bayesiana. Es la distribución de probabilidad de un parámetro (o parámetros) después de haber observado algunos datos. En términos simples, es lo que "creemos" sobre un parámetro después de haber tomado en cuenta tanto nuestro conocimiento previo como la nueva evidencia proporcionada por los datos.
+
+Matemáticamente, la distribución posterior $P(\theta|D)$ para un parámetro $\theta$ dados unos datos $D$ se calcula como:
+
+$$
+P(\theta|D) = \frac{P(D|\theta)\times P(\theta)}{P(D)} 
+$$
+
+Donde:
+
+- $P(\theta|D)$ es la probabilidad posterior
+- $P(D|\theta)$ es la verosimilitud, que mide cuán bien el modelo con parámetro $\theta$ explica los datos.
+- $P(\theta)$  es el prior, nuestra creencia inicial sobre $\theta$ antes de ver los datos.
+- $P(D)$ es la evidencia o marginal likelihood, que es una constante normalizadora que asegura que la posterior sea una distribución de probabilidad válida.
+
+#### Ejemplo Práctico: Estimación de la tasa de éxito
+
+Supongamos que estás desarrollando un nuevo medicamento y quieres estimar la tasa de éxito $p$ del medicamento. Antes de realizar cualquier ensayo, crees que no tienes razón para favorecer cualquier valor particular de $p$, por lo que eliges un prior uniforme entre 0 y 1.
+
+Realizas un ensayo con 10 pacientes y 7 de ellos muestran mejoría después de tomar el medicamento.
+
+Para este escenario, la verosimilitud es binomial y el prior es uniforme. Debido a que el prior Beta(1,1) es un prior uniforme y es conjugado para la verosimilitud binomial, podemos usarlo para obtener fácilmente una distribución posterior Beta.
+
+```{r}
+# Simulación en R:
+# Parámetros iniciales
+alpha_prior <- 1
+beta_prior <- 1
+
+# Actualización con los datos
+pacientes_mejoria <- 7
+pacientes_no_mejoria <- 3
+alpha_posterior <- alpha_prior + pacientes_mejoria
+beta_posterior <- beta_prior + pacientes_no_mejoria
+
+# Visualizar prior y posterior
+curve(dbeta(x, alpha_prior, beta_prior), from=0, to=1, ylab="Densidad", xlab="Probabilidad de Mejoría", col="blue", lwd=2, main="Prior y Posterior")
+curve(dbeta(x, alpha_posterior, beta_posterior), col="red", lwd=2, add=TRUE)
+legend("topright", legend=c("Prior", "Posterior"), col=c("blue", "red"), lwd=2)
+
+```
+
+
+La distribución posterior refleja nuestra creencia actualizada sobre la tasa de éxito $p$ después de observar los datos del ensayo. Como puedes ver, la distribución posterior se inclina hacia valores más altos de $p$ debido a la alta tasa de éxito observada en la muestra.
+
+Esta es la esencia del enfoque bayesiano: comenzar con una creencia inicial (prior), recopilar datos, y luego actualizar esa creencia para obtener una nueva distribución (posterior) que refleje tanto el prior como los datos.
+
+::: {.callout-tip}
+## Ejemplo Moneda
+Imagina que estás lanzando una moneda y quieres determinar la probabilidad $p$ de obtener cara. Inicias con un prior uniforme, es decir, cualquier valor de $p$ entre 0 y 1 es igualmente probable. Luego, lanzas la moneda 10 veces y obtienes 7 caras.
+
+```{r}
+# Simulación en R:
+# Para este ejemplo, utilizamos la distribución beta como prior y posterior debido a su conjugación con la binomial.
+
+# Parámetros iniciales
+alpha_prior <- 1
+beta_prior <- 1
+
+# Actualización con los datos
+caras <- 7
+no_caras <- 3
+alpha_posterior <- alpha_prior + caras
+beta_posterior <- beta_prior + no_caras
+
+# Visualizar prior y posterior
+curve(dbeta(x, alpha_prior, beta_prior), from=0, to=1, ylab="Densidad", xlab="Probabilidad de Cara", col="blue", lwd=2, main="Prior y Posterior")
+curve(dbeta(x, alpha_posterior, beta_posterior), col="red", lwd=2, add=TRUE)
+legend("topright", legend=c("Prior", "Posterior"), col=c("blue", "red"), lwd=2)
+```
+
+:::
+
+
+### Estimaciones Bayesianas
+
+Las estimaciones bayesianas, como la media o mediana de la distribución posterior, proporcionan una descripción concisa de la ubicación de la distribución.
+
+::: {.callout-tip}
+## Ejemplo Moneda
+Siguiendo el ejemplo anterior de la moneda, podríamos querer estimar la probabilidad media de obtener cara.
+
+```{r}
+# Simulación en R:
+estimacion_media <- alpha_posterior / (alpha_posterior + beta_posterior)
+estimacion_media
+```
+
+:::
+
+### Distribuciones Prior Conjugadas
+
+Una distribución prior es conjugada a una verosimilitud particular si, cuando se combinan, resultan en una distribución posterior de la misma familia que el prior.
+
+::: {.callout-tip}
+## Ejemplo
+El prior Beta es conjugado para la verosimilitud binomial. Si empezamos con un prior Beta y observamos datos binomiales, el posterior será también una distribución Beta.
+:::
+
+
+### Priors No Informativos
+
+Estos priors se utilizan cuando no se tiene información previa fuerte sobre un parámetro. La idea es que el prior tenga un impacto mínimo y que los datos determinen en gran medida el posterior.
+
+::: {.callout-tip}
+## Ejemplo
+Para la estimación de la media $\mu$ de una distribución normal con varianza conocida, un prior no informativo es proporcional a una constante (prior uniforme).
+:::
+
+
+### Intervalos de Credibilidad Bayesianos
+
+Son rangos dentro de los cuales creemos que un parámetro se encuentra con una cierta probabilidad, generalmente el 95%.
+
+::: {.callout-tip}
+## Ejemplo
+iguiendo el ejemplo de la moneda, podríamos querer un intervalo de credibilidad del 95% para la probabilidad $p$ de obtener cara.
+
+```{r}
+# Simulación en R:
+intervalo_credibilidad <- qbeta(c(0.025, 0.975), alpha_posterior, beta_posterior)
+intervalo_credibilidad
+
+```
+
+:::
