@@ -1,0 +1,4 @@
+---
+title: "Inferencia Bayesiana\nConceptos básicos"
+format: html
+---
