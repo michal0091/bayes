@@ -1,4 +1,158 @@
 ---
-title: "Inferencia Bayesiana\nConceptos básicos"
+title: Inferencia Bayesiana
+subtitle: Conceptos básicos
 format: html
 ---
+
+## Introducción
+
+La inferencia bayesiana es un enfoque para la estadística en el que las probabilidades representan un grado de creencia, o estados subjetivos de incertidumbre. Esta perspectiva es diferente de la frecuentista, donde las probabilidades representan frecuencias de eventos en largas series de repeticiones.
+
+La esencia de la inferencia bayesiana se resume en el Teorema de Bayes:
+
+$$
+P(A|B) = \frac{P(B|A)\times P(A)}{P(B)} 
+$$
+
+Donde:
+
+- $P(A|B)$ es la probabilidad posterior de $A$ dado $B$
+- $P(B|A)$ es la probabilidad de $B$ dado $A$ (verosimilitud)
+- $P(A)$ es la probabilidad de $A$ (prior)
+- $P(B)$ es la probabilidad marginal de $B$
+
+En el contexto de la inferencia bayesiana:
+
+- **Prior (Priori)**: Representa nuestra creencia inicial sobre un parámetro antes de observar cualquier dato. Puede ser subjetivo o basarse en información previa.
+- **Likelihood (Verosimilitud)**: Es cómo los datos informan sobre el parámetro de interés.
+- **Posterior (Posteriori)**: Es la actualización de nuestra creencia sobre el parámetro después de observar los datos. Es una combinación del prior y la verosimilitud.
+- **Evidence (Evidencia)**: Es una constante de normalización. En la práctica, a menudo no es necesario calcularla directamente, ya que estamos interesados en el posterior relativo.
+
+::: {.callout-tip}
+## Ejemplo Simple: Lanzamiento de una Moneda 🪙
+
+Supongamos que tienes una moneda y quieres saber si está trucada. Lanzas la moneda varias veces y cuentas el número de caras. Usando la inferencia bayesiana, puedes actualizar tu creencia sobre la probabilidad de que salga cara basándote en los datos observados.
+
+**Prior**: Puedes empezar creyendo que la moneda es justa, por lo que la probabilidad de cara es 0,5. Sin embargo, para ser menos restrictivo, puedes usar una distribución beta como prior, que es una distribución continua entre 0 y 1. Si eliges la Beta(1,1), es equivalente a un prior uniforme, es decir, todas las probabilidades de cara son igualmente posibles.
+
+**Likelihood**: Si lanzas la moneda $n$ veces y obtienes $k$ caras, la verosimilitud se describe con una distribución binomial.
+
+**Posterior**: Usando el teorema de Bayes, combinas el prior y la verosimilitud para obtener una distribución posterior para la probabilidad de cara.
+
+:::
+
+### Ejemplo en R
+
+**Supuestos**:
+1. **Prior**: Utilizaremos una distribución Beta(1,1) como prior, lo que indica que inicialmente creemos que todas las probabilidades de obtener cara son igualmente posibles.
+2. **Likelihood**: Supongamos que lanzamos la moneda 100 veces y obtenemos 60 caras. Usaremos una distribución binomial para modelar esto.
+3. **Posterior**: La distribución posterior es proporcional al producto del prior y la verosimilitud. Afortunadamente, con la elección de una distribución Beta como prior y una distribución binomial como verosimilitud, el posterior también es una distribución Beta. Esta es una de las propiedades útiles de la distribución Beta: es el prior conjugado para la distribución binomial.
+
+```{r}
+# Instala y carga las bibliotecas necesarias (si aún no lo has hecho)
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Parámetros
+n <- 100  # número total de lanzamientos
+k <- 60   # número de caras obtenidas
+
+# Parámetros para la distribución prior Beta(1,1)
+alpha_prior <- 1
+beta_prior <- 1
+
+# Parámetros para la distribución posterior Beta(k+alpha, n-k+beta)
+alpha_posterior <- k + alpha_prior
+beta_posterior <- n - k + beta_prior
+
+# Generamos datos para visualización
+p <- seq(0, 1, by = 0.01)
+prior <- dbeta(p, shape1 = alpha_prior, shape2 = beta_prior)
+likelihood <- dbinom(k, size = n, prob = p)
+posterior <- dbeta(p, shape1 = alpha_posterior, shape2 = beta_posterior)
+
+# Creamos un data frame para la visualización
+df <- data.frame(p = p, 
+                 prior = prior, 
+                 likelihood = likelihood / max(likelihood),  # Normalizamos para la visualización
+                 posterior = posterior)
+
+# Visualizamos las distribuciones
+ggplot(df, aes(x = p)) +
+  geom_line(aes(y = prior, color = "Priori"), lwd = 1.5) +
+  geom_line(aes(y = likelihood, color = "Verosimilitud (escalada)"), lwd = 1.5, linetype = "dashed") +
+  geom_line(aes(y = posterior, color = "Posteriori"), lwd = 1.5) +
+  labs(title = "Inferencia Bayesiana: Lanzamiento de una Moneda",
+       y = "Densidad", x = "Probabilidad de caras",
+       color = "") +
+  theme_minimal()
+
+```
+
+
+
+## Ventajas de la inferencia Beyesiana
+
+1. **Incorporación de Conocimiento Previo**: Una de las principales ventajas es la capacidad de incorporar conocimientos previos (o creencias) sobre un problema en el análisis. Esto es especialmente útil en situaciones donde los datos son escasos.
+
+::: {.callout-tip}
+ Imagina que estás lanzando una moneda, pero antes de realizar cualquier lanzamiento, un experto te dice que cree que la moneda está ligeramente sesgada hacia caras. Puedes incorporar esta creencia usando un prior que se incline hacia caras, por ejemplo, una distribución Beta(3,2).
+
+```{r}
+# Simulación en R
+set.seed(123)
+prior <- rbeta(1000, 3, 2)
+hist(prior, main="Prior Distribution", xlab="Probability of Heads", col="skyblue", border="white")
+```
+
+:::
+
+2. **Estimaciones Probabilísticas**: En lugar de hacer estimaciones puntuales de parámetros, la inferencia bayesiana proporciona distribuciones completas (posteriores), lo que nos da una idea de la incertidumbre asociada con nuestras estimaciones.
+
+::: {.callout-tip}
+ En un estudio clínico, se quiere determinar la eficacia de un nuevo medicamento. En lugar de simplemente decir que el medicamento tiene un X% de eficacia, con la inferencia bayesiana puedes decir que hay un 95% de probabilidad de que la eficacia esté entre Y% y Z%.
+
+```{r}
+# Simulación en R
+# Supongamos que el prior es Beta(10, 10) y que observamos 70 éxitos y 30 fallos con el medicamento.
+posterior <- rbeta(1000, 10 + 70, 10 + 30)
+hist(posterior, main="Posterior Distribution", xlab="Efficacy", col="lightgreen", border="white")
+quantile(posterior, c(0.025, 0.975))
+```
+
+:::
+
+3. **Modelado Jerárquico**: Permite modelar la estructura jerárquica en datos, donde los parámetros pueden tener sus propios priors que dependen de otros parámetros.
+
+::: {.callout-tip}
+Supongamos que estás estudiando el rendimiento de los estudiantes en diferentes escuelas. En lugar de tratar cada escuela como independiente, puedes usar un modelo jerárquico para compartir información entre escuelas, creyendo que hay una distribución subyacente común para todas las escuelas.
+
+```{r}
+# Supongamos que tienes datos sobre puntajes de exámenes de estudiantes de 10 escuelas.
+# Puedes modelar el puntaje promedio de cada escuela como proveniente de una distribución normal global.
+
+# Esto es solo un esquema y no un código ejecutable:
+# model {
+#   for (i in 1:10) {
+#     school_mean[i] ~ dnorm(global_mean, global_sd)
+#     score[i] ~ dnorm(school_mean[i], school_sd[i])
+#   }
+#   global_mean ~ dnorm(0, 100)
+#   global_sd ~ dunif(0, 100)
+# }
+
+```
+
+:::
+
+4. **Flexibilidad**: La inferencia bayesiana es flexible en términos de las distribuciones que se pueden usar y cómo se pueden combinar.
+
+
+::: {.callout-warning}
+## Desafíos y Consideraciones
+1. **Elección del Prior**: La elección del prior puede ser subjetiva y, en algunos casos, puede influir significativamente en el posterior, especialmente cuando hay pocos datos.
+
+2. **Coste Computacional**: Algunos modelos bayesianos pueden ser computacionalmente intensivos, especialmente cuando se utilizan métodos de muestreo como Markov Chain Monte Carlo (MCMC) para obtener estimaciones del posterior.
+
+3. **Convergencia**: Cuando se utilizan técnicas de muestreo, es esencial asegurarse de que las cadenas hayan convergido a la distribución objetivo. Esto puede requerir herramientas y diagnósticos específicos.
+:::
